@@ -144,3 +144,14 @@ class TreeNode:
             children_str += child.__repr__() + " "
         children_str = children_str.strip() + ")"
         return self.label + children_str
+
+def main(treestr: str):
+    tree = TreeNode.from_treestring(treestr)
+    print(tree.get_link())
+
+if __name__ == "__main__":
+    from sys import argv
+    if len(argv) != 2:
+        print("Usage: treemaker.py [tree string]")
+        exit(1)
+    main(argv[1])
