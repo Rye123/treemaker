@@ -17,3 +17,13 @@ class TestTreeNode(unittest.TestCase):
         tree.children[2].add_children([TreeNode("A32"), TreeNode("A33")])
 
         self.assertEqual(tree.__repr__(), "A(A1(A11 A12(A121 A122 A123)) A2 A3(A31 A32 A33) A4)")
+
+    def test_from_treestring(self):
+        treestrs = [
+            "A(A1(A11 A12(A121 A122 A123)) A2 A3(A31 A32 A33) A4)",
+            "A(A1(A11 A12) A2 A3(A31) A4)",
+            "A(A1(A11 A12) A2 A3(A31) A4 A5(A51 A52 A53(A531 A532(A5321) A533) A54) A6)"
+            ]
+
+        for treestr in treestrs:
+            self.assertEqual(TreeNode.from_treestring(treestr).__repr__(), treestr)
