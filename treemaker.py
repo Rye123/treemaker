@@ -1,6 +1,7 @@
 from typing import List
 
 class TreeNode:
+    """ A data structure to represent a node in a tree. """
     def __init__(self, label: str):
         self.children: List['TreeNode'] = []
         self.label = label
@@ -15,6 +16,11 @@ class TreeNode:
             self.add_child(child)
 
     def __repr__(self) -> str:
+        """
+        Prints the treenode and its children.
+        - A tree consisting of node A with children A1, A2, A3 will be printed as 'A(A1 A2 A3)'
+        - A tree consisting of node A with child A1, which has two children A11 and A12 will be printed as 'A(A1(A11 A12))'.
+        """
         if len(self.children) == 0:
             return self.label
         
