@@ -1,4 +1,17 @@
-from typing import List
+from typing import List, Tuple
+from base64 import urlsafe_b64encode
+import json
+
+counter = 0
+def reset_id():
+    global counter
+    counter = 0
+
+def get_id() -> int:
+    global counter
+    ret = counter
+    counter += 1
+    return ret
 
 class TreeNode:
     """ A data structure to represent a node in a tree. """
@@ -10,6 +23,7 @@ class TreeNode:
         self.children: List['TreeNode'] = []
         self.parent = None
         self.label = label
+        self._id = get_id()
 
     def add_child(self, child: 'TreeNode'):
         if not isinstance(child, TreeNode):
@@ -72,6 +86,50 @@ class TreeNode:
                     cur_label += char
         return root
 
+    def get_nodes(self) -> List['TreeNode']:
+        """ Returns a list of all nodes in this tree. """
+        if len(self.children) == 0:
+            return [self]
+        ret = []
+        ret.append(self)
+        for child in self.children:
+            ret += child.get_nodes()
+        return ret
+
+    def _get_mermaidstrs(self) -> Tuple[List[str], List[str]]:
+        """ Returns the ID strings and link strings for the MermaidJS code """
+        idstrings = []
+        links = []
+        for node in self.get_nodes():
+            idstrings.append(f"id{node._id}([{node.label}])")
+            for child in node.children:
+                links.append(f"id{node._id}-->id{child._id}")
+        return idstrings, links
+        
+    def get_mermaid_code(self) -> str:
+        """ Returns neat MermaidJS code that would generate the result in `render()`. """
+        idstrs, linkstrs = self._get_mermaidstrs()
+        ret = "flowchart TD\n" + "\n".join([f"\t{idstr}" for idstr in idstrs]) + "\n" + "\n".join([f"\t{linkstr}" for linkstr in linkstrs])
+        return ret
+
+    def _get_encoded_state(self) -> str:
+        idstrs, linkstrs = self._get_mermaidstrs()
+
+        mermaid_state = {
+            "code": self.get_mermaid_code(),
+            "mermaid": { "theme": "default" },
+            "autoSync": True,
+            "updateDiagram": True,
+            }
+
+        json_encoded = json.dumps(mermaid_state).encode('ascii')
+        return urlsafe_b64encode(json_encoded).decode('ascii')
+
+    def get_link(self) -> str:
+        """ Returns a link to a MermaidJS-generated diagram of the tree. """
+        url = "https://mermaid.ink/img/base64:" + self._get_encoded_state()
+        return url
+
     def __repr__(self) -> str:
         """
         Prints the treenode and its children.
@@ -86,4 +144,3 @@ class TreeNode:
             children_str += child.__repr__() + " "
         children_str = children_str.strip() + ")"
         return self.label + children_str
-        
