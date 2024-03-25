@@ -2,6 +2,8 @@ from typing import List, Tuple
 from base64 import urlsafe_b64encode
 import json
 
+ACCEPTED_NONALNUMS = ['_', '-']
+
 counter = 0
 def reset_id():
     global counter
@@ -18,12 +20,15 @@ class TreeNode:
     def __init__(self, label: str):
         if not isinstance(label, str):
             raise ValueError(f"TreeNode.__init__: Expected string as label, was given: {label} which has type {type(label)}")
-        if len(label) == 0:
-            raise ValueError("TreeNode.__init__: Expected nonzero-length string as label")
+        # if len(label) == 0:
+        #     raise ValueError("TreeNode.__init__: Expected nonzero-length string as label")
         self.children: List['TreeNode'] = []
         self.parent = None
         self.label = label
         self._id = get_id()
+
+        if len(self.label) == 0:
+            self.label = "_"
 
     def add_child(self, child: 'TreeNode'):
         if not isinstance(child, TreeNode):
@@ -55,35 +60,40 @@ class TreeNode:
         cur_node = None
         for i in range(len(treestr)):
             char = treestr[i]
-            match char:
-                case ' ':
-                    # Add the label to the current node
-                    if len(cur_label) != 0:
-                        cur_node.add_child(TreeNode(cur_label))
-                        cur_label = ""
-                case '(':
-                    # Add a new node to the current node, and set that node as the current node, updating the parent
-                    if cur_node is None:
-                        # No current node, hence this is the root
-                        cur_node = TreeNode(cur_label)
-                        root = cur_node
-                    else:
-                        cur_node.add_child(TreeNode(cur_label))
-                        child = cur_node.children[-1]
-                        cur_node = child
-                    cur_label = ""
-                case ')':
-                    if len(cur_label) != 0:
-                        # Add a new node to the current node
-                        cur_node.add_child(TreeNode(cur_label))
+            try:
+                match char:
+                    case ' ':
+                        # Add the label to the current node
+                        if len(cur_label) != 0:
+                            cur_node.add_child(TreeNode(cur_label))
+                            cur_label = ""
+                    case '(':
+                        # Add a new node to the current node, and set that node as the current node, updating the parent
+                        if cur_node is None:
+                            # No current node, hence this is the root
+                            cur_node = TreeNode(cur_label)
+                            root = cur_node
+                            cur_label = ""
+                        else:
+                            cur_node.add_child(TreeNode(cur_label))
+                            child = cur_node.children[-1]
+                            cur_node = child
+                            cur_label = ""
+                    case ')':
+                        if len(cur_label) != 0:
+                            # Add a new node to the current node
+                            cur_node.add_child(TreeNode(cur_label))
                         
-                    # Return to the parent
-                    cur_node = cur_node.parent
-                    cur_label = ""
-                case _:
-                    if not char.isalnum():
-                        raise ValueError(f"TreeNode.from_treestring: Unexpected character {char} in treestring.")
-                    cur_label += char
+                            # Return to the parent
+                            cur_node = cur_node.parent
+                            cur_label = ""
+                    case _:
+                        if not char.isalnum() and char not in ACCEPTED_NONALNUMS:
+                            raise ValueError(f"TreeNode.from_treestring: Unexpected character {char} in treestring.")
+                        cur_label += char
+            except Exception as e:
+                print(f"Syntax Error at character {i} ({char}): {str(e)}")
+                exit(1)
         return root
 
     def get_nodes(self) -> List['TreeNode']:
@@ -147,6 +157,7 @@ class TreeNode:
 
 def main(treestr: str):
     tree = TreeNode.from_treestring(treestr)
+    print(tree.get_mermaid_code())
     print(tree.get_link())
 
 if __name__ == "__main__":
